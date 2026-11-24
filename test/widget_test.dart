@@ -1,30 +1,81 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:flagsmith/flagsmith.dart';
 import 'package:flagsmith_ab_test/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Flagsmith A/B Testing App', () {
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    testWidgets('Annual plan appears first when flag is ON',
+            (WidgetTester tester) async {
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+          final client = FlagsmithClient(
+            apiKey: 'test-api-key',
+          );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+          try {
+            await tester.pumpWidget(
+              MyApp(
+                showAnnualPlanFirst: true,
+                flagsmithClient: client,
+              ),
+            );
+
+            await tester.pump();
+
+            expect(find.text('Upgrade Your Plan'), findsOneWidget);
+            expect(find.text('Annual Power Plan'), findsOneWidget);
+            expect(find.text('Monthly Pass'), findsOneWidget);
+            expect(find.text('BEST VALUE'), findsOneWidget);
+
+            final annual =
+            tester.getTopLeft(find.text('Annual Power Plan'));
+
+            final monthly =
+            tester.getTopLeft(find.text('Monthly Pass'));
+
+            expect(annual.dy, lessThan(monthly.dy));
+
+          } finally {
+            await tester.pumpWidget(const SizedBox.shrink());
+            await client.close();
+          }
+        });
+
+    testWidgets('Monthly plan appears first when flag is OFF',
+            (WidgetTester tester) async {
+
+          final client = FlagsmithClient(
+            apiKey: 'test-api-key',
+          );
+
+          try {
+            await tester.pumpWidget(
+              MyApp(
+                showAnnualPlanFirst: false,
+                flagsmithClient: client,
+              ),
+            );
+
+            await tester.pump();
+
+            expect(find.text('Upgrade Your Plan'), findsOneWidget);
+            expect(find.text('Annual Power Plan'), findsOneWidget);
+            expect(find.text('Monthly Pass'), findsOneWidget);
+            expect(find.text('POPULAR'), findsOneWidget);
+
+            final annual =
+            tester.getTopLeft(find.text('Annual Power Plan'));
+
+            final monthly =
+            tester.getTopLeft(find.text('Monthly Pass'));
+
+            expect(monthly.dy, lessThan(annual.dy));
+
+          } finally {
+            await tester.pumpWidget(const SizedBox.shrink());
+            await client.close();
+          }
+        });
   });
 }

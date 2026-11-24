@@ -121,7 +121,7 @@ class CheckoutScreen extends StatelessWidget {
                       // Register this identity in Flagsmith to simulate traffic
                       await flagsmithClient.getFeatureFlags(user: Identity(identifier: userId));
 
-                      print('Data sent to Flagsmith for: $userId');
+                      debugPrint('Data sent to Flagsmith for: $userId');
                     },
                     child: const Text(
                       'Continue to Payment',
@@ -220,7 +220,7 @@ class CheckoutScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: textColor.withOpacity(0.7),
+                              color: textColor.withValues(alpha: 0.7)
                             ),
                           ),
                         ],
